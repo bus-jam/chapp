@@ -1,6 +1,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://github.com/bus-jam/chapp-server/blob/staging/license)
 
-# chapp
+# chapp-server
 
 ## TEAM MEMBERS
 
