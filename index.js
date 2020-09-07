@@ -1,5 +1,6 @@
 'use strict';
 
+const mongoose = require('mongoose');
 const http = require('http').createServer();
 const io = require('socket.io')(http);
 const port = 3002;
@@ -8,6 +9,12 @@ require('@tensorflow/tfjs-node')
 const toxicity = require('@tensorflow-models/toxicity');
 const threshold = 0.9;
 // const encrypt = require('socket.io-encrypt')
+
+const mongooseOptions = {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useUnifiedTopology: true,
+  };
 
 // io.use(encrypt('test'));
 
