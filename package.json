@@ -11,8 +11,25 @@
     "url": "git+https://github.com/bus-jam/chapp-server.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "contributors": [
+    {
+      "name": "Sean Murray",
+      "url": "https://github.com/seanjmurray"
+    },
+    {
+      "name": "Matt Herriges",
+      "url": "https://github.com/herrigesmt"
+    },
+    {
+      "name": "Jennifer Chinzi",
+      "url": "https://github.com/jchinzi"
+    },
+    {
+      "name": "Blake Romero",
+      "url": "https://github.com/blakerom"
+    }
+  ],
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/bus-jam/chapp-server/issues"
   },
@@ -20,6 +37,8 @@
   "dependencies": {
     "@tensorflow-models/toxicity": "^1.2.2",
     "@tensorflow/tfjs": "^2.3.0",
+    "@tensorflow/tfjs-converter": "^1.7.4",
+    "@tensorflow/tfjs-core": "^2.3.0",
     "@tensorflow/tfjs-node": "^2.3.0",
     "bcrypt": "^5.0.0",
     "dotenv": "^8.2.0",
