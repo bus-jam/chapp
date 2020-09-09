@@ -60,7 +60,7 @@ const monitorForToxic = (evt, socket) => {
 
 const signInHandler = (user, socket) => {
     socket.username = user.username
-    console.log('we are in signinhandler')
+    console.log('we are in signinhandler', user)
     socket.emit('connected', user.username);
     socket.room = 'lobby';
     socket.join(socket.room)
@@ -101,8 +101,9 @@ io.on('connection', socket => {
     socket.on('signin', async user => {
         // TODO: add exception if someone tries to sign-in with a username that is already logged in
         if(await Users.authenticateBasic(user.username, user.password)){
-            console.log('User connected.');
+            console.log('User connected.',users);
             if(users[user.username]){
+                console.log(users)
                 socket.emit('invalid-login', {error: 'that user is already connected'})
             } else {
                 console.log('i am here')                
@@ -118,21 +119,20 @@ io.on('connection', socket => {
         signupHandler(user, socket)
     });
     
-    // Filter for Inappropriate Language
-    // TODO: Monitor Whispers as well 
     
     socket.on('message', evt => {
         monitorForToxic(evt, socket);
     })
     
+    // TODO: Monitor Whispers for inappropriate language 
     socket.on('whisper', (data) => {
         const  { user, message } = data;
         console.log(data)
         const target = users[user]
         
-        // TODO: add exception if user is not currently online
+        // exception if user is not currently online
         if(!Object.keys(users).includes(target)){
-            socket.emit('unavailable')
+            socket.emit('unavailable', {error: `User ${target} is not online`});
         } else {
             socket.to(target.id).emit('whisper',{ message, user: socket.username })
         }
@@ -147,19 +147,20 @@ io.on('connection', socket => {
     })
 
     
-    //TODO: write code to send all connected users to front end
     socket.on('getusers', () => {
         let userArray = Object.keys(users);
         socket.emit('sendusers', userArray)
     })
 
+    socket.on('disconnect', () => {
+        delete users[socket.username];
+        console.log(users)
+        socket.leave(socket.room)
+        console.log('disconnected')
+    })
 })
 
-io.on('disconnect', evt => {
-    delete users[evt];
-    socket.leave(socket.room);
-    console.log('disconnected');
-})
+
 
 mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
 
