@@ -163,8 +163,10 @@ io.on('connection', socket => {
 
 
 
-mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
-
-http.listen(port, () => {
-    console.log(`listening on port: ${port}`)
+mongoose.connect(process.env.MONGODB_URI, mongooseOptions).then( () => {
+    http.listen(port, () => {
+        console.log(`listening on port: ${port}`)
+    })
+}).catch(err => {
+    console.log(err)
 })
