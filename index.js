@@ -39,7 +39,7 @@ const users = {};
 // Connections
 const monitorForToxic = (evt, socket) => {
     let mod;
-    console.log(evt);
+    console.log('in monitorfortoxic', evt);
     const threshold = .9;
     toxicity.load(threshold).then(model => {
         model.classify([evt.cmd]).then(predictions => {
@@ -52,12 +52,13 @@ const monitorForToxic = (evt, socket) => {
                 evt.cmd = 'you said something bad';
                 socket.emit('toxic', evt);
             } else {
-                socket.to(socket.room).broadcast.emit('message', evt);
+                socket.to(socket.room).emit('message', evt);
             }
         })
     })
 }
 
+// TODO: Add note re: /help command for reference on first signing in
 const signInHandler = (user, socket) => {
     socket.username = user.username
     console.log('we are in signinhandler', user)
@@ -78,7 +79,7 @@ const joinHandler = (room, socket) => {
         socket.room = room;
         socket.join(socket.room);
         socket.emit('joined', socket.room);
-        socket.to(socket.room).broadcast.emit('message',{cmd:` joined ${room}`, username: socket.username});
+        socket.to(socket.room).emit('message',{cmd:` joined ${room}`, username: socket.username});
     } else {
         socket.emit('invalid room', {error: 'there is no room by that name. Type /join with no arguments to get a list of rooms you can join.'})
     }
@@ -99,7 +100,6 @@ io.on('connection', socket => {
     
     // Basic Auth of Returning User
     socket.on('signin', async user => {
-        // TODO: add exception if someone tries to sign-in with a username that is already logged in
         if(await Users.authenticateBasic(user.username, user.password)){
             console.log('User connected.',users);
             if(users[user.username]){
@@ -121,20 +121,21 @@ io.on('connection', socket => {
     
     
     socket.on('message', evt => {
+        console.log('message', evt)
         monitorForToxic(evt, socket);
     })
     
     // TODO: Monitor Whispers for inappropriate language 
     socket.on('whisper', (data) => {
-        const  { user, message } = data;
-        console.log(data)
+        const  { user, whisper } = data;
+        console.log('data', data)
         const target = users[user]
         
         // exception if user is not currently online
-        if(!Object.keys(users).includes(target)){
-            socket.emit('unavailable', {error: `User ${target} is not online`});
+        if(!Object.keys(users).includes(user)){
+            socket.emit('unavailable', {error: `User ${user} is not online`});
         } else {
-            socket.to(target.id).emit('whisper',{ message, user: socket.username })
+            socket.to(target.id).emit('whisper',{ message:whisper, user: socket.username })
         }
         
     })
