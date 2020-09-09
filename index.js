@@ -144,13 +144,13 @@ io.on('connection', socket => {
         joinHandler(room, socket);
     })
     socket.on('getrooms', () => {
-        socket.emit('sendrooms', rooms)
+        socket.emit('joinmenu', rooms)
     })
 
     
     socket.on('getusers', () => {
         let userArray = Object.keys(users);
-        socket.emit('sendusers', userArray)
+        socket.emit('whispermenu', userArray)
     })
 
     socket.on('disconnect', () => {
