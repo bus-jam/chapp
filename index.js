@@ -34,25 +34,37 @@ const users = {};
 // TODO: maybe add ways to alter some things about the server through the server console (add rooms, ban people, etc.)
 // ------------------------------------------------------------
 // Connections
-const monitorForToxic = (evt, socket) => { // TODO: make this more single-responsibility, ie. not handling the emit, just checking toxicity levels, so we can put it in whisper, also
-    let mod;
+const monitorForToxic = async (evt) => {
+    let mod = false;
     const threshold = .9;
-    toxicity.load(threshold, ['toxicity']).then(model => {
-        model.classify([evt.cmd]).then(predictions => {
-            predictions.forEach(obj => {
-                if(obj.results[0].match){
-                    mod = true;
-                }
-            })
-            if(mod){
-                evt.cmd = 'you said something bad';
-                socket.emit('toxic', evt);
-            } else {
-                socket.to(socket.room).emit('message', evt);
-            }
-        })
+    const model = await toxicity.load(threshold, ['toxicity'])
+    const predictions = await model.classify([evt.message])
+    predictions.forEach(obj => {
+        if(obj.results[0].match){
+            mod = true;
+        }
     })
+    return mod
 }
+// const monitorForToxic = (evt, socket, event, room) => { // TODO: make this more single-responsibility, ie. not handling the emit, just checking toxicity levels, so we can put it in whisper, also
+//     let mod;
+//     const threshold = .9;
+//     toxicity.load(threshold, ['toxicity']).then(model => {
+//         model.classify([evt.message]).then(predictions => {
+//             predictions.forEach(obj => {
+//                 if(obj.results[0].match){
+//                     mod = true;
+//                 }
+//             })
+//             if(mod){
+//                 evt.message = 'you said something bad';
+//                 socket.emit('toxic', evt);
+//             } else {
+//                 socket.to(room).emit(event, evt);
+//             }
+//         })
+//     })
+// }
 
 // TODO: Add note re: /help command for reference on first signing in
 const signInHandler = (user, socket) => {
@@ -99,8 +111,7 @@ io.on('connection', socket => {
             if(users[user.username]){
                 console.log(users)
                 socket.emit('invalid-login', {error: 'that user is already connected'})
-            } else {
-                console.log('i am here')                
+            } else {               
                 signInHandler(user, socket);
             }
         } else {
@@ -112,22 +123,41 @@ io.on('connection', socket => {
     socket.on('signup', user => {
         signupHandler(user, socket)
     });
-    
-    
-    socket.on('message', evt => {
-        console.log('message', evt)
-        monitorForToxic(evt, socket);
+
+    socket.on('help', () => {
+        let userCount = Object.keys(users).length
+        socket.emit('printhelp', userCount)
+    })
+        
+    socket.on('message', async message => {
+        console.log('message', message)
+        console.log('I am the mod',monitorForToxic(message))
+        console.log('I am the mod wait',await monitorForToxic(message))
+        // monitorForToxic(message, socket, 'message', socket.room)
+        
+        if(await monitorForToxic(message)){
+            console.log('I am here')
+            message.message = 'you said something bad';
+            socket.emit('toxic', message);
+        } else {
+            socket.to(socket.room).emit('message', message);
+        };
+        
     })
     
-    // TODO: Monitor Whispers for inappropriate language 
-    socket.on('whisper', (data) => {
-        const  { user, whisper } = data;
-        console.log('data', data)
-        const target = users[user]
-        if(!Object.keys(users).includes(user)){
-            socket.emit('unavailable', {error: `User ${user} is not online`});
+    socket.on('whisper', async whisper => {
+        const  { username, message } = whisper;
+        console.log('whisper', whisper)
+        const target = users[username]
+        if(!Object.keys(users).includes(username)){
+            socket.emit('unavailable', {error: `User ${username} is not online`})
         } else {
-            socket.to(target.id).emit('whisper',{ message:whisper, user: socket.username })
+            if(await monitorForToxic(whisper)){
+                whisper.message = 'you said something bad';
+                socket.emit('toxic', whisper)
+            } else {
+                socket.to(target.id).emit('whisper',{ message, username })
+            }
         }        
     })
     
@@ -138,7 +168,6 @@ io.on('connection', socket => {
         socket.emit('joinmenu', rooms)
     })
 
-    
     socket.on('getusers', () => {
         let userArray = Object.keys(users);
         socket.emit('whispermenu', userArray)
