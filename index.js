@@ -1,7 +1,5 @@
 'use strict';
 
-// TODO: deploy
-
 // External Libraries
 require('dotenv').config();
 require('@tensorflow/tfjs')
@@ -18,9 +16,7 @@ const Users = require('./model/user-model.js');
 const port = process.env.PORT;
 const rooms = [
     'general',
-    'dev-talk',
-    'other stuff',
-    'join test',
+    'dev-talk', 
     'lobby'
 ];
 
@@ -34,14 +30,14 @@ const users = {};
 
 // TODO: lots of refactoring to make things single-responsibility
 // TODO: normalize objects being passed into listeners, normalize parameters
-// 
+// TODO: modularize callbacks into a separate file
+// TODO: maybe add ways to alter some things about the server through the server console (add rooms, ban people, etc.)
 // ------------------------------------------------------------
 // Connections
-const monitorForToxic = (evt, socket) => {
+const monitorForToxic = (evt, socket) => { // TODO: make this more single-responsibility, ie. not handling the emit, just checking toxicity levels, so we can put it in whisper, also
     let mod;
-    console.log('in monitorfortoxic', evt);
     const threshold = .9;
-    toxicity.load(threshold).then(model => {
+    toxicity.load(threshold, ['toxicity']).then(model => {
         model.classify([evt.cmd]).then(predictions => {
             predictions.forEach(obj => {
                 if(obj.results[0].match){
@@ -61,7 +57,6 @@ const monitorForToxic = (evt, socket) => {
 // TODO: Add note re: /help command for reference on first signing in
 const signInHandler = (user, socket) => {
     socket.username = user.username
-    console.log('we are in signinhandler', user)
     socket.emit('connected', user.username);
     socket.room = 'lobby';
     socket.join(socket.room)
@@ -73,7 +68,6 @@ const signInHandler = (user, socket) => {
 }
 
 const joinHandler = (room, socket) => {
-    console.log(room);
     if(rooms.includes(socket.room)){
         socket.leave(socket.room);
         socket.room = room;
@@ -130,14 +124,11 @@ io.on('connection', socket => {
         const  { user, whisper } = data;
         console.log('data', data)
         const target = users[user]
-        
-        // exception if user is not currently online
         if(!Object.keys(users).includes(user)){
             socket.emit('unavailable', {error: `User ${user} is not online`});
         } else {
             socket.to(target.id).emit('whisper',{ message:whisper, user: socket.username })
-        }
-        
+        }        
     })
     
     socket.on('join', (room) => {
