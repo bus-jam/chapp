@@ -48,5 +48,8 @@
     "socket.io": "^2.3.0",
     "socket.io-encrypt": "^0.2.1",
     "standard": "^14.3.4"
+  },
+  "devDependencies": {
+    "jest": "^26.4.2"
   }
 }
