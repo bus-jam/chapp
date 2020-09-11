@@ -4,7 +4,7 @@
   "description": "[![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://github.com/bus-jam/chapp-server/blob/staging/license)",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --verbose --coverage --forceExit",
     "start": "node index.js"
   },
   "repository": {
@@ -48,5 +48,8 @@
     "socket.io": "^2.3.0",
     "socket.io-encrypt": "^0.2.1",
     "standard": "^14.3.4"
+  },
+  "devDependencies": {
+    "jest": "^26.4.2"
   }
 }
