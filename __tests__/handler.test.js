@@ -57,7 +57,7 @@ describe('Test receiving data and parsing and sending data', () => {
         expect(spy).toHaveBeenCalledWith('whispermenu', Object.keys(users))
         delete users.mockUser
     })
-    it.skip('should properly monitor users inputs for toxicity', async () => {
+    it('should properly monitor users inputs for toxicity', async () => {
         let message = {
             message: 'bitch',
             username: 'test'
@@ -71,7 +71,7 @@ describe('Test receiving data and parsing and sending data', () => {
         expect(spy).toHaveBeenCalled()
         expect(spy).toHaveBeenCalledWith('toxic', {message: 'you said something bad', username: 'test'})
     })
-    it.skip('should properly let through non-toxic user inputs', async () => {
+    it('should properly let through non-toxic user inputs', async () => {
         
         let message = {
             message: 'hello!',
@@ -87,7 +87,7 @@ describe('Test receiving data and parsing and sending data', () => {
         let result = await messageHandler(socket, message)
         expect(spy).toHaveBeenCalledWith('message', message)
     })
-    it.skip('should handle whispers', async () => {
+    it('should handle whispers', async () => {
         const message = {
             message: 'hello!',
             username: 'mockUser'
